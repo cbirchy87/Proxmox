@@ -5,7 +5,7 @@ source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxV
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Combined script for FlareSolverr and Prowlarr
 
-APP="FlareSolverr & Prowlarr"
+APP="FlareSolverr-Prowlarr"
 var_tags="${var_tags:-proxy;arr}"
 var_cpu="${var_cpu:-2}"
 var_ram="${var_ram:-2048}"
