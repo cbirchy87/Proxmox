@@ -87,16 +87,6 @@ function update_script() {
 function install_flaresolverr() {
   msg_info "Installing FlareSolverr"
   
-  # Fix repository configuration
-  msg_info "Configuring repositories"
-  sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/pve-enterprise.list 2>/dev/null || true
-  sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/ceph.list 2>/dev/null || true
-  
-  # Add community repositories if not present
-  if ! grep -q "pve-no-subscription" /etc/apt/sources.list.d/pve-install-repo.list 2>/dev/null; then
-    echo "deb http://download.proxmox.com/debian/pve $(lsb_release -sc) pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
-  fi
-  
   # Install dependencies
   apt-get update
   apt-get install -y curl wget
@@ -170,9 +160,34 @@ EOF
   msg_ok "Prowlarr installation completed"
 }
 
+function fix_repositories() {
+  msg_info "Configuring repositories"
+  
+  # Disable enterprise repositories
+  if [[ -f /etc/apt/sources.list.d/pve-enterprise.list ]]; then
+    sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/pve-enterprise.list
+  fi
+  
+  if [[ -f /etc/apt/sources.list.d/ceph.list ]]; then
+    sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/ceph.list
+  fi
+  
+  # Remove any other enterprise repo files that might exist
+  find /etc/apt/sources.list.d/ -name "*enterprise*" -type f -exec sed -i 's/^deb/#deb/' {} \; 2>/dev/null || true
+  find /etc/apt/sources.list.d/ -name "*ceph*" -type f -exec sed -i 's/^deb/#deb/' {} \; 2>/dev/null || true
+  
+  # Add community repositories
+  echo "deb http://download.proxmox.com/debian/pve $(lsb_release -sc) pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
+  
+  msg_ok "Repository configuration completed"
+}
+
 start
 build_container
 description
+
+# Fix repositories first
+fix_repositories
 
 # Install both services
 install_flaresolverr
